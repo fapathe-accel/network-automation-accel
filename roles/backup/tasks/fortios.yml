@@ -1,7 +1,6 @@
-# This task will backup the configuration
+# This task will backup the configuration via SSH
 - name: Backup Fortinet FortiOS configuration via SSH
-  ansible.netcommon.cli_command:
-    command: show full-configuration
+  ansible.builtin.raw: show full-configuration
   register: config_backup
 
 - name: Save FortiOS backup to tmp
