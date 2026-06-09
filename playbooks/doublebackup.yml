@@ -58,3 +58,55 @@
       become: true
       delegate_to: backup-server
       delegate_facts: true
+    # ── Installation cifs-utils ───────────────────────────────────────────────
+    - name: Install cifs-utils package
+      ansible.builtin.package:
+        name: cifs-utils
+        state: present
+      delegate_to: backup-server
+      become: true
+      run_once: true
+    # ── Montage partage Windows ───────────────────────────────────────────────
+    - name: Create mount point directory
+      ansible.builtin.file:
+        path: /mnt/netsec_backups
+        state: directory
+        mode: "755"
+      delegate_to: backup-server
+      become: true
+      run_once: true
+    - name: Mount Windows network share
+      ansible.posix.mount:
+        src: "//{{ smb_server_ip }}/Accel_technologies/Knowledgebase/NetSec_Backups"
+        path: /mnt/netsec_backups
+        fstype: cifs
+        opts: "username={{ smb_user }},password={{ smb_password }},uid=1000,gid=1000,file_mode=0644,dir_mode=0755"
+        state: mounted
+      delegate_to: backup-server
+      become: true
+      run_once: true
+    # ── Copie vers partage Windows ────────────────────────────────────────────
+    - name: Create directory on network share
+      ansible.builtin.file:
+        path: "/mnt/netsec_backups/{{ hostvars['backup-server'].inv_name }}/{{ hostvars['backup-server'].datetime }}/"
+        state: directory
+        mode: "755"
+      delegate_to: backup-server
+      become: true
+      run_once: true
+    - name: Copy configuration to network share
+      ansible.builtin.copy:
+        src: "{{ config_output.backup_path }}"
+        dest: "/mnt/netsec_backups/{{ hostvars['backup-server'].inv_name }}/{{ hostvars['backup-server'].datetime }}/{{ inventory_hostname }}.cfg"
+        mode: "644"
+      when: config_output is defined
+      become: true
+      delegate_to: backup-server
+    # ── Démontage partage Windows ─────────────────────────────────────────────
+    - name: Unmount Windows network share
+      ansible.posix.mount:
+        path: /mnt/netsec_backups
+        state: unmounted
+      delegate_to: backup-server
+      become: true
+      run_once: true
