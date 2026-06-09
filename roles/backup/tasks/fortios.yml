@@ -1,6 +1,10 @@
 # This task will backup the configuration via SSH
-- name: Backup Fortinet FortiOS configuration via SSH
-  ansible.builtin.raw: show full-configuration
+- name: Disable pager and backup FortiOS configuration
+  ansible.builtin.raw: |
+    config system console
+    set output standard
+    end
+    show full-configuration
   register: config_backup
 
 - name: Save FortiOS backup to tmp
