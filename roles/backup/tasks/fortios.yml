@@ -1,0 +1,16 @@
+# This task will backup the configuration
+- name: Backup Fortinet FortiOS configuration via SSH
+  ansible.netcommon.cli_command:
+    command: show full-configuration
+  register: config_backup
+
+- name: Save FortiOS backup to tmp
+  ansible.builtin.copy:
+    content: "{{ config_backup.stdout }}"
+    dest: "/tmp/{{ inventory_hostname }}.txt"
+  delegate_to: localhost
+
+- name: Set config_output fact to match playbook expectation
+  ansible.builtin.set_fact:
+    config_output:
+      backup_path: "/tmp/{{ inventory_hostname }}.txt"
